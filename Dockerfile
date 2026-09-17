@@ -4,9 +4,16 @@
 
 FROM node:18-slim
 
-# arduino-cli 설치에 필요한 도구
-RUN apt-get update && apt-get install -y curl unzip ca-certificates && \
-    curl -fsSL https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh | sh -s -- -b /usr/local/bin && \
+# arduino-cli 설치
+# 주의: 공식 install.sh 스크립트는 내부적으로 GitHub API를 호출해서 최신 버전을 확인하는데,
+# 일부 클라우드 빌드 환경(Render 등)에서 그 호출이 막혀 실패하는 경우가 있음.
+# 그래서 install.sh 대신, 특정 버전을 아두이노 공식 다운로드 서버에서 직접 받아 설치함.
+RUN apt-get update && apt-get install -y curl ca-certificates && \
+    curl -fsSL -o /tmp/arduino-cli.tar.gz \
+      https://downloads.arduino.cc/arduino-cli/arduino-cli_1.5.1_Linux_64bit.tar.gz && \
+    tar -xzf /tmp/arduino-cli.tar.gz -C /usr/local/bin arduino-cli && \
+    chmod +x /usr/local/bin/arduino-cli && \
+    rm /tmp/arduino-cli.tar.gz && \
     rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
