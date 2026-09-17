@@ -7,6 +7,11 @@ const { spawn } = require('child_process');
 
 const app = express();
 const PORT = process.env.PORT || 3000; // 클라우드 배포 시 플랫폼이 PORT 환경변수로 포트를 지정해줌
+
+// ── CORS 설정 ────────────────────────────────────────────────────────
+// /api/compile 경로에 대해 OPTIONS(preflight) 및 POST 등 모든 요청에 CORS 허용
+app.use('/api/compile', cors());
+
 // 주의: /api/upload(실제 하드웨어에 업로드까지 하는 위험한 작업)는 CORS를 켜지 않음.
 // 프론트(index.html)와 이 서버가 같은 오리진일 때(로컬 실행형)만 호출 가능하게 유지.
 app.use(express.json({limit:'1mb'}));
@@ -43,7 +48,7 @@ app.get('/api/ports',async(req,res)=>{
 // 하드웨어에 직접 접근하지 않고 컴파일만 하므로, 다른 도메인(예: GitHub Pages에
 // 올라간 index.html)에서도 호출 가능하게 이 라우트에만 cors()를 허용한다.
 // 실제 업로드는 여기서 돌려준 .hex를 브라우저가 avrgirl-arduino로 직접 굽는다.
-app.post('/api/compile', cors(), async (req, res) => {
+app.post('/api/compile', async (req, res) => {
   const { code } = req.body; let fqbn;
   try{fqbn=board(req.body.board||'arduino:avr:uno');}catch(e){return res.status(400).json({success:false,message:e.message});}
   if(!code)return res.status(400).json({success:false,message:'코드가 없습니다.'});
